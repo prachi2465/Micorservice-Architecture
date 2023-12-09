@@ -1,0 +1,93 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/microservices 
+    username: root
+    password: Prachi$1997
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect:org.hibernate.dialect.MySQL8Dialect
+  application:
+    name: USER-SERVICE
+    
+    # security configuration
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://dev-10852344.okta.com/oauth2/default
+      client:
+        registration:
+          my-internal-client:
+            provider: okta
+            authorization-grant-type: client_credentials
+            scope: internal
+            client-id: 0oa8etx1b6ts9o3ug5d7
+            client-secret: 7ecOyM3CRDM_R_uup9Qnl8Zwzrli_pKneuiX-cxc
+        provider: 
+          okta:
+            issuer-uri: https://dev-10852344.okta.com/oauth2/default
+    
+    
+# to register this application first start service registry and then start this application  
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    fetch-registry: true
+    register-with-eureka: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+      
+      
+#circuit breaker configuration 
+#https://resilience4j.readme.io/docs/circuitbreaker      
+management:
+  health:
+    circuitbreakers:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include:
+        - health
+  endpoint:
+    health:
+      show-details: always 
+      
+resilience4j:
+  circuitbreaker:
+    instances:
+      rating_hotel_breaker:
+        registerHealthIndicator: true
+        eventConsumerBufferSize: 10
+        failureRateThreshold: 50
+        minimumNumberOfCalls: 5
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 6s
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowSize: 10
+        slidingWindowType: COUNT_BASED
+  retry:
+    instances:
+      rating_hotel_retry:
+        max-attempts: 3
+        wait-duration: 5s
+  ratelimiter:
+    instances:
+      rating_hotel_rateLimiter:
+        limit-refresh-period: 4s
+        limit-for-period: 2 
+        timeout-duration: 0s
+        #in 4sec we allow 2 request https://resilience4j.readme.io/docs/ratelimiter
+
+okta:
+  oauth2:
+    issuer: https://dev-10852344.okta.com/oauth2/default
+    audience: api://default
+    
